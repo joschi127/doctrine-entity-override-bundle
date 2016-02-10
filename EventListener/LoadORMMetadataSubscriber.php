@@ -66,9 +66,9 @@ class LoadORMMetadataSubscriber implements EventSubscriber
         $metadata = $eventArgs->getClassMetadata();
 
         $this->setIsMappedSuperclass($metadata);
-        $this->setCustomRepositoryClasses($metadata, $eventArgs->getEntityManager()->getConfiguration());
 
         if (!$metadata->isMappedSuperclass) {
+            $this->setCustomRepositoryClasses($metadata, $eventArgs->getEntityManager()->getConfiguration());
             $this->setAssociationMappings($metadata, $eventArgs->getEntityManager()->getConfiguration());
         } else {
             $this->unsetAssociationMappings($metadata);
@@ -107,6 +107,8 @@ class LoadORMMetadataSubscriber implements EventSubscriber
                     );
                     if ($parentMetadata->customRepositoryClassName) {
                         $metadata->setCustomRepositoryClass($parentMetadata->customRepositoryClassName);
+
+                        break;
                     }
                 }
             }
