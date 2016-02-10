@@ -1,0 +1,27 @@
+{
+  "name": "joschi127/doctrine-entity-override-bundle",
+  "type": "symfony-bundle",
+  "description": "Symfony bundle which allows to override entities by using inheritance",
+  "keywords": [ "doctrine", "doctrine2", "entity", "override", "inheritance","customize", "mapped-superclass" ],
+  "homepage": "https://github.com/joschi127/doctrine-entity-override-bundle",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "joschi127",
+      "email": "127.joschi@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.4.5",
+    "symfony/framework-bundle": "~2.1|~3.0",
+    "doctrine/orm": "~2.2,>=2.2.3"
+  },
+  "autoload": {
+    "psr-4": { "Joschi127\\DoctrineEntityOverrideBundle\\": "" }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "1.0.x-dev"
+    }
+  }
+}
