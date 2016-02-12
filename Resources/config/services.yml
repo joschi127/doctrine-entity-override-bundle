@@ -1,6 +1,5 @@
 parameters:
     joschi127_doctrine_entity_override.event_subscriber.load_orm_metadata.class: Joschi127\DoctrineEntityOverrideBundle\EventListener\LoadORMMetadataSubscriber
-    joschi127_doctrine_entity_override.config.overridden_entities: []
 
 services:
 
