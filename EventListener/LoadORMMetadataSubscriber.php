@@ -79,9 +79,10 @@ class LoadORMMetadataSubscriber implements EventSubscriber
         if (!$metadata->isMappedSuperclass) {
             $this->setCustomRepositoryClasses($metadata, $eventArgs->getEntityManager()->getConfiguration());
             $this->setAssociationMappings($metadata, $eventArgs->getEntityManager()->getConfiguration());
+            $this->setFieldMappings($metadata, $eventArgs->getEntityManager()->getConfiguration());
         } else {
             $this->unsetAssociationMappings($metadata);
-            $this->unsetDuplicateFieldMappings($metadata, $eventArgs->getEntityManager()->getConfiguration());
+            $this->unsetFieldMappings($metadata);
         }
     }
 
@@ -158,9 +159,54 @@ class LoadORMMetadataSubscriber implements EventSubscriber
                     );
                     if (in_array($parentClass, $configuration->getMetadataDriverImpl()->getAllClassNames())) {
                         $configuration->getMetadataDriverImpl()->loadMetadataForClass($parentClass, $parentMetadata);
-                        foreach ($parentMetadata->getAssociationMappings() as $key => $value) {
-                            if ($this->typeIsRelation($value['type'])) {
-                                $metadata->associationMappings[$key] = $value;
+
+                        foreach ($parentMetadata->getAssociationMappings() as $name => $mapping) {
+                            if ($this->typeIsRelation($mapping['type'])) {
+                                $metadata->associationMappings[$name] = $mapping;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    protected function setFieldMappings(ClassMetadataInfo $metadata, $configuration)
+    {
+        foreach ($this->overriddenEntities as $interface => $class) {
+            $class = $this->getClass($class);
+
+            if ($class === $metadata->getName()) {
+                // inherit association mappings of all parent classes for the actually used class
+                foreach ($this->parentClassesByClass[$class] as $parentClass) {
+                    $parentMetadata = new ClassMetadata(
+                        $parentClass,
+                        $configuration->getNamingStrategy()
+                    );
+                    if (in_array($parentClass, $configuration->getMetadataDriverImpl()->getAllClassNames())) {
+                        $configuration->getMetadataDriverImpl()->loadMetadataForClass($parentClass, $parentMetadata);
+
+                        // if parent class is overridden and class is not the interface itself ...
+                        // (parent class is "in between" in a multi level inheritance)
+                        if ($this->classIsOverridden($parentClass) && !isset($this->overriddenEntities[$parentClass])) {
+                            // ... add field mapping of the parent class to the the actually used class
+                            // it was removed from the parent class in unsetFieldMappings()
+                            foreach ($parentMetadata->fieldMappings as $name => $mapping) {
+                                // remove existing mapping for these fields
+                                unset($metadata->fieldMappings[$mapping['fieldName']]);
+                                unset($metadata->columnNames[$mapping['fieldName']]);
+                                unset($metadata->fieldNames[$mapping['columnName']]);
+
+                                // re-add mapping for these fields (as if it were fields of the class itself, not
+                                // inherited fields)
+                                unset($mapping['declared']);
+                                unset($mapping['inherited']);
+                                $metadata->mapField($mapping);
+                            }
+                            foreach ($parentMetadata->reflFields as $name => $field) {
+                                if (!isset($metadata->reflFields[$name])) {
+                                    $metadata->reflFields[$name] = $field;
+                                }
                             }
                         }
                     }
@@ -173,24 +219,27 @@ class LoadORMMetadataSubscriber implements EventSubscriber
     {
         if ($this->classIsOverridden($metadata->getName())) {
             // remove all association mappings from mapped super classes, which are not allowed to have association mappings
-            foreach ($metadata->getAssociationMappings() as $key => $value) {
-                if ($this->typeIsRelation($value['type'])) {
-                    unset($metadata->associationMappings[$key]);
+            foreach ($metadata->getAssociationMappings() as $name => $mapping) {
+                if ($this->typeIsRelation($mapping['type'])) {
+                    unset($metadata->associationMappings[$name]);
                 }
             }
         }
     }
 
-    protected function unsetDuplicateFieldMappings(ClassMetadataInfo $metadata, $configuration)
+    protected function unsetFieldMappings(ClassMetadataInfo $metadata)
     {
         // if class is overridden and class is not the interface itself ...
         // (class is "in between" in a multi level inheritance)
         if ($this->classIsOverridden($metadata->getName()) && !isset($this->overriddenEntities[$metadata->getName()])) {
-            // ... unset all mapped fields (not sure why, but this is required, otherwise a MappingException "Duplicate
-            // definition of column" will be thrown when loading the metadata of the actually used class)
-            foreach ($metadata->fieldMappings as $key => $value) {
-                if (!isset($value['declared']) || $value['declared'] === $metadata->getName()) {
-                    unset($metadata->fieldMappings[$key]);
+            // ... unset all mapped fields (otherwise a MappingException "Duplicate definition of column" will be thrown
+            // when loading the metadata of the actually used class)
+            // it will later be added as mapping for the actually used class in setFieldMappings()
+            foreach ($metadata->fieldMappings as $name => $mapping) {
+                if (!isset($mapping['declared']) || $mapping['declared'] === $metadata->getName()) {
+                    unset($metadata->fieldMappings[$mapping['fieldName']]);
+                    unset($metadata->columnNames[$mapping['fieldName']]);
+                    unset($metadata->fieldNames[$mapping['columnName']]);
                 }
             }
         }
