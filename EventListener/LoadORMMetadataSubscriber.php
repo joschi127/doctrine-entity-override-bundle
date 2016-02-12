@@ -37,6 +37,11 @@ class LoadORMMetadataSubscriber implements EventSubscriber
     protected $overriddenEntities;
 
     /**
+     * @var array
+     */
+    protected $parentClassesByClass = [];
+
+    /**
      * Constructor
      *
      * @param array $overriddenEntities
@@ -45,6 +50,10 @@ class LoadORMMetadataSubscriber implements EventSubscriber
     {
         $this->container = $container;
         $this->overriddenEntities = $overriddenEntities;
+        foreach ($overriddenEntities as $interface => $class) {
+            $class = $this->getClass($class);
+            $this->parentClassesByClass[$class] = array_values(class_parents($class));
+        }
     }
 
     /**
@@ -72,25 +81,44 @@ class LoadORMMetadataSubscriber implements EventSubscriber
             $this->setAssociationMappings($metadata, $eventArgs->getEntityManager()->getConfiguration());
         } else {
             $this->unsetAssociationMappings($metadata);
+            $this->unsetDuplicateFieldMappings($metadata, $eventArgs->getEntityManager()->getConfiguration());
         }
     }
 
-    private function setIsMappedSuperclass(ClassMetadataInfo $metadata)
+    protected function setIsMappedSuperclass(ClassMetadataInfo $metadata)
     {
         foreach ($this->overriddenEntities as $interface => $class) {
             $interface = $this->getInterface($interface);
             $class = $this->getClass($class);
+
+            // set isMappedSuperclass = false for the actually used class
             if ($class === $metadata->getName()) {
                 $metadata->isMappedSuperclass = false;
+
+                return;
             }
+
+            // set isMappedSuperclass = true for the super class / interface which is overridden
             if ($interface === $metadata->getName()) {
                 $metadata->isMappedSuperclass = true;
+
+                return;
+            }
+
+            // set isMappedSuperclass = true for all other parent classes of the actually used class to allow
+            // overriding with multiple levels of inheritance
+            foreach($this->parentClassesByClass[$class] as $parentClass) {
+                if ($parentClass === $metadata->getName()) {
+                    $metadata->isMappedSuperclass = true;
+
+                    return;
+                }
             }
         }
     }
 
 
-    private function setCustomRepositoryClasses(ClassMetadataInfo $metadata, $configuration)
+    protected function setCustomRepositoryClasses(ClassMetadataInfo $metadata, $configuration)
     {
         if ($metadata->customRepositoryClassName) {
             return;
@@ -100,34 +128,36 @@ class LoadORMMetadataSubscriber implements EventSubscriber
             $class = $this->getClass($class);
 
             if ($class === $metadata->getName()) {
-                foreach (class_parents($metadata->getName()) as $parent) {
+                // inherit custom repository class of first parent classes which has one for the actually used class
+                foreach ($this->parentClassesByClass[$class] as $parentClass) {
                     $parentMetadata = new ClassMetadata(
-                        $parent,
+                        $parentClass,
                         $configuration->getNamingStrategy()
                     );
                     if ($parentMetadata->customRepositoryClassName) {
                         $metadata->setCustomRepositoryClass($parentMetadata->customRepositoryClassName);
 
-                        break;
+                        return;
                     }
                 }
             }
         }
     }
 
-    private function setAssociationMappings(ClassMetadataInfo $metadata, $configuration)
+    protected function setAssociationMappings(ClassMetadataInfo $metadata, $configuration)
     {
         foreach ($this->overriddenEntities as $interface => $class) {
             $class = $this->getClass($class);
 
             if ($class === $metadata->getName()) {
-                foreach (class_parents($metadata->getName()) as $parent) {
+                // inherit association mappings of all parent classes for the actually used class
+                foreach ($this->parentClassesByClass[$class] as $parentClass) {
                     $parentMetadata = new ClassMetadata(
-                        $parent,
+                        $parentClass,
                         $configuration->getNamingStrategy()
                     );
-                    if (in_array($parent, $configuration->getMetadataDriverImpl()->getAllClassNames())) {
-                        $configuration->getMetadataDriverImpl()->loadMetadataForClass($parent, $parentMetadata);
+                    if (in_array($parentClass, $configuration->getMetadataDriverImpl()->getAllClassNames())) {
+                        $configuration->getMetadataDriverImpl()->loadMetadataForClass($parentClass, $parentMetadata);
                         foreach ($parentMetadata->getAssociationMappings() as $key => $value) {
                             if ($this->typeIsRelation($value['type'])) {
                                 $metadata->associationMappings[$key] = $value;
@@ -139,16 +169,56 @@ class LoadORMMetadataSubscriber implements EventSubscriber
         }
     }
 
-    private function unsetAssociationMappings(ClassMetadataInfo $metadata)
+    protected function unsetAssociationMappings(ClassMetadataInfo $metadata)
     {
-        foreach ($metadata->getAssociationMappings() as $key => $value) {
-            if ($this->typeIsRelation($value['type'])) {
-                unset($metadata->associationMappings[$key]);
+        if ($this->classIsOverridden($metadata->getName())) {
+            // remove all association mappings from mapped super classes, which are not allowed to have association mappings
+            foreach ($metadata->getAssociationMappings() as $key => $value) {
+                if ($this->typeIsRelation($value['type'])) {
+                    unset($metadata->associationMappings[$key]);
+                }
             }
         }
     }
 
-    private function typeIsRelation($type)
+    protected function unsetDuplicateFieldMappings(ClassMetadataInfo $metadata, $configuration)
+    {
+        // if class is overridden and class is not the interface itself ...
+        // (class is "in between" in a multi level inheritance)
+        if ($this->classIsOverridden($metadata->getName()) && !isset($this->overriddenEntities[$metadata->getName()])) {
+            // ... unset all mapped fields (not sure why, but this is required, otherwise a MappingException "Duplicate
+            // definition of column" will be thrown when loading the metadata of the actually used class)
+            foreach ($metadata->fieldMappings as $key => $value) {
+                if (!isset($value['declared']) || $value['declared'] === $metadata->getName()) {
+                    unset($metadata->fieldMappings[$key]);
+                }
+            }
+        }
+
+        return;
+    }
+
+    protected function classIsOverridden($className)
+    {
+        foreach ($this->overriddenEntities as $interface => $class) {
+            $interface = $this->getInterface($interface);
+            $class = $this->getClass($class);
+
+            if ($interface === $className) {
+                return true;
+            }
+
+            foreach($this->parentClassesByClass[$class] as $parentClass) {
+                if ($parentClass === $className) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    protected function typeIsRelation($type)
     {
         return in_array(
             $type,
@@ -167,7 +237,7 @@ class LoadORMMetadataSubscriber implements EventSubscriber
      * @return string
      * @throws \InvalidArgumentException
      */
-    private function getInterface($key)
+    protected function getInterface($key)
     {
         if ($this->container->hasParameter($key)) {
             return $this->container->getParameter($key);
@@ -188,7 +258,7 @@ class LoadORMMetadataSubscriber implements EventSubscriber
      * @return string
      * @throws \InvalidArgumentException
      */
-    private function getClass($key)
+    protected function getClass($key)
     {
         if ($this->container->hasParameter($key)) {
             return $this->container->getParameter($key);

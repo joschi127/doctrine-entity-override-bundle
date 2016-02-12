@@ -36,10 +36,13 @@ class DoctrineTargetEntitiesResolver
         $resolveTargetEntityListener = $container->findDefinition('doctrine.orm.listeners.resolve_target_entity');
 
         foreach ($overriddenEntities as $interface => $class) {
+            $interface = $this->getInterface($container, $interface);
+            $class = $this->getClass($container, $class);
+
             $resolveTargetEntityListener
                 ->addMethodCall('addResolveTargetEntity', array(
-                    $this->getInterface($container, $interface),
-                    $this->getClass($container, $class),
+                    $interface,
+                    $class,
                     array()
                 ))
             ;
