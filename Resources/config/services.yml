@@ -6,7 +6,7 @@ services:
     joschi127_doctrine_entity_override.event_subscriber.load_orm_metadata:
         class: %joschi127_doctrine_entity_override.event_subscriber.load_orm_metadata.class%
         arguments:
-            - @service_container
+            - "@service_container"
             - %joschi127_doctrine_entity_override.config.overridden_entities%
         tags:
             - { name: doctrine.event_subscriber }
