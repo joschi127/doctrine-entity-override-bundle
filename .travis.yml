@@ -17,11 +17,11 @@ env:
 matrix:
     include:
         - php: 7.0
-          env: SYMFONY_VERSION=3.1.*
+          env: DEPS=dev SYMFONY_VERSION=3.1.*
         - php: 5.5
           env: COMPOSER_FLAGS="--prefer-lowest"
         - php: 7.0
-          env: COMPOSER_FLAGS="--prefer-stable" SYMFONY_VERSION=3.0.*
+          env: DEPS=dev COMPOSER_FLAGS="--prefer-stable" SYMFONY_VERSION=3.0.*
     fast_finish: true
 
 before_install:
@@ -29,7 +29,8 @@ before_install:
     - echo 'date.timezone = "Europe/Berlin"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
     - phpenv config-rm xdebug.ini || true
     - composer self-update
-    - if [ "$SYMFONY_VERSION" != "" ]; then composer require symfony/symfony:${SYMFONY_VERSION} --no-update; fi
+    - if [ "$DEPS" = "dev" ]; then perl -pi -e 's/^}$/,"minimum-stability":"dev"}/' composer.json; fi
+    - if [ "$SYMFONY_VERSION" != "" ]; then composer require "symfony/symfony:${SYMFONY_VERSION}" --no-update; fi
 
 install:
     - composer update --prefer-dist $COMPOSER_FLAGS

@@ -14,7 +14,6 @@ framework:
     validation:      { enable_annotations: true }
     templating:
         engines: ['twig']
-        assets_version: 123
     default_locale:  "%locale%"
     trusted_proxies: ~
     session:
@@ -31,8 +30,6 @@ monolog:
 twig:
     debug:            "%kernel.debug%"
     strict_variables: "%kernel.debug%"
-    form:
-        resources: ~
 
 security:
     role_hierarchy:
@@ -50,9 +47,6 @@ security:
         dev:
             pattern:  ^/(_(profiler|wdt)|css|images|js)/
             security: false
-            remember_me:
-                key: secret
-                lifetime: 604800
     access_control:
 
 doctrine:
