@@ -1,0 +1,38 @@
+language: php
+
+php:
+    - 5.4
+    - 5.5
+    - 5.6
+
+matrix:
+    allow_failures:
+        - php: 5.6
+
+before_script:
+    - echo 'date.timezone = "Europe/Berlin"' >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
+    - mysql -e 'CREATE DATABASE doctrine_entity_override_test'
+    - > 
+        echo 'parameters:
+            database_driver:   pdo_mysql
+            database_host:     127.0.0.1
+            database_port:     null
+            database_name:     doctrine_entity_override_test
+            database_user:     root
+            database_password: ~
+            locale:            en
+       
+        ' > ./Tests/Functional/app/config/parameters.yml
+    - curl -s http://getcomposer.org/installer | php
+    - php composer.phar install --dev --prefer-dist
+    - php ./Tests/Functional/app/console doctrine:schema:create
+    - php ./Tests/Functional/app/console doctrine:schema:update --force
+
+script:
+    - 'php ./vendor/bin/phpunit -c ./ --testdox'
+
+after_script:
+    - mysql -e 'DROP DATABASE doctrine_entity_override_test;'
+
+notifications:
+    email: 127.joschi@gmail.com

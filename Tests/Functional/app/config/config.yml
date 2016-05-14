@@ -1,0 +1,92 @@
+imports:
+    - { resource: parameters.yml }
+
+framework:
+    test: ~
+    translator:      { fallback: "%locale%" }
+    translator: ~
+    secret:          "secret"
+    router:
+        resource: "%kernel.root_dir%/config/routing.yml"
+        strict_requirements: "%kernel.debug%"
+    form:            true
+    csrf_protection: true
+    validation:      { enable_annotations: true }
+    templating:
+        engines: ['twig']
+        assets_version: 123
+    default_locale:  "%locale%"
+    trusted_proxies: ~
+    session:
+        storage_id:  session.storage.mock_file
+    fragments:       ~
+    http_method_override: true
+    profiler:       { only_exceptions: false }
+
+monolog:
+    handlers:
+       main:
+           type: test
+
+twig:
+    debug:            "%kernel.debug%"
+    strict_variables: "%kernel.debug%"
+    form:
+        resources: ~
+
+security:
+    role_hierarchy:
+        ROLE_USER:        ROLE_USER
+        ROLE_ADMIN:       [ ROLE_USER ]
+        ROLE_SUPER_ADMIN: [ ROLE_USER, ROLE_ADMIN, ROLE_ALLOWED_TO_SWITCH ]
+    encoders:
+        FOS\UserBundle\Model\UserInterface: sha512
+    providers:
+        fos_userbundle:
+            id: fos_user.user_provider.username_email
+    firewalls:
+        main:
+            http_basic:
+        dev:
+            pattern:  ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+            remember_me:
+                key: secret
+                lifetime: 604800
+    access_control:
+
+doctrine:
+    dbal:
+        driver:   "%database_driver%"
+        host:     "%database_host%"
+        port:     "%database_port%"
+        dbname:   "%database_name%"
+        user:     "%database_user%"
+        password: "%database_password%"
+        charset:  UTF8
+    orm:
+        default_entity_manager: default
+        auto_generate_proxy_classes: "%kernel.debug%"
+        entity_managers:
+            default:
+                connection:       default
+                naming_strategy: doctrine.orm.naming_strategy.underscore
+                auto_mapping: true
+                mappings:
+                    Joschi127DoctrineEntityOverrideBundleTest:
+                        mapping:              true
+                        type:                 yml
+                        dir:                  "Tests/Functional/src/Resources/config/doctrine"
+                        alias:                ~
+                        prefix:               Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity
+                        is_bundle:            false
+
+joschi127_doctrine_entity_override:
+    overridden_entities:
+        # OriginalBundle\Entity\Example: CustomizedBundle\Entity\Example
+        Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\User: Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser
+
+fos_user:
+    db_driver: orm
+    firewall_name: main
+    user_class: Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\User
