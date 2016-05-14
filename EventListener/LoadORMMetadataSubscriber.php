@@ -123,13 +123,7 @@ class LoadORMMetadataSubscriber implements EventSubscriber
                 }
             }
         }
-
-        if ($metadata->isMappedSuperclass) {
-            $metadata->identifier = [];
-            $metadata->generatorType = ClassMetadata::GENERATOR_TYPE_NONE;
-        }
     }
-
 
     protected function setCustomRepositoryClasses(ClassMetadataInfo $metadata, $configuration)
     {
