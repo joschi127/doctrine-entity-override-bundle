@@ -34,9 +34,21 @@ class User extends BaseUser
      */
     protected $lastName;
 
+    /**
+     * @var ArrayCollection
+     * @ORM\ManyToMany(targetEntity="Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\Group", cascade={"persist"})
+     * @ORM\JoinTable(name="test_user_has_group",
+     *      joinColumns={@ORM\JoinColumn(name="user_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@ORM\JoinColumn(name="group_id", referencedColumnName="id", unique=true)}
+     * )
+     */
+    protected $groups;
+
     public function __construct()
     {
         parent::__construct();
+
+        $this->groups = new ArrayCollection();
     }
 
     /**

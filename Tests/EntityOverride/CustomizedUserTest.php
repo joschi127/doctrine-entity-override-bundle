@@ -5,13 +5,16 @@ namespace Joschi127\DoctrineEntityOverrideBundle\Tests\EntityOverride;
 use Doctrine\ORM\EntityRepository;
 use FOS\UserBundle\Doctrine\UserManager;
 use Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser;
+use Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\Group;
 use Joschi127\DoctrineEntityOverrideBundle\Tests\TestBase;
 
 class CustomizedUserTest extends TestBase
 {
-    public function testRepositoryUsingCustomizedEntityName()
+    public function testRepository()
     {
-        $this->doTestRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser');
+        $this->doTestRepository(
+            'Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser'
+        );
     }
 
     // todo: maybe add this in future? would it be possible to get getRepository() working with original entity name?
@@ -26,7 +29,7 @@ class CustomizedUserTest extends TestBase
     //        $this->doTestRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\User');
     //    }
 
-    public function testRepositoryUsingUserManager()
+    public function testUserManager()
     {
         $this->drop();
 
@@ -61,6 +64,45 @@ class CustomizedUserTest extends TestBase
         $this->assertEquals($cleanUser->getPhoneNumber(), $user->getPhoneNumber());
     }
 
+    public function testManyToManyRelation()
+    {
+        $this->testRepository();
+        $this->createGroup();
+
+        /** @var EntityRepository $userRepository */
+        $userRepository = $this->em->getRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser');
+        /** @var CustomizedUser $user */
+        $user = $userRepository->findOneBy([
+            'username' => $this->getTestUsername(),
+        ]);
+
+        /** @var EntityRepository $groupRepository */
+        $groupRepository = $this->em->getRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\Group');
+        $group = $groupRepository->findOneBy([
+            'name' => 'test_group',
+        ]);
+
+        $user->getGroups()->add($group);
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var CustomizedUser $user */
+        $user = $userRepository->findOneBy([
+            'username' => $this->getTestUsername(),
+        ]);
+        $this->assertInstanceOf(
+            'Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser',
+            $user
+        );
+        $cleanUser = $this->getNewTestUserObject();
+        $this->assertEquals($this->getTestUsername(), $user->getUsername());
+        $this->assertEquals($cleanUser->getFirstName(), $user->getFirstName());
+        $this->assertEquals($cleanUser->getLastName(), $user->getLastName());
+        $this->assertEquals($cleanUser->getEmail(), $user->getEmail());
+        $this->assertEquals($cleanUser->getPhoneNumber(), $user->getPhoneNumber());
+    }
+
     protected function doTestRepository($entityName)
     {
         $this->drop();
@@ -70,9 +112,8 @@ class CustomizedUserTest extends TestBase
         $userRepository = $this->em->getRepository($entityName);
         /** @var CustomizedUser $user */
         $user = $userRepository->findOneBy([
-            'username' => $this->getTestUsername()
+            'username' => $this->getTestUsername(),
         ]);
-
         $this->assertInstanceOf(
             'Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser',
             $user
@@ -94,20 +135,31 @@ class CustomizedUserTest extends TestBase
         $this->em->clear();
     }
 
+    protected function createGroup()
+    {
+        $group = $this->getNewTestGroupObject();
+
+        $this->em->persist($group);
+        $this->em->flush();
+        $this->em->clear();
+    }
+
     protected function drop()
     {
         $userRepository = $this->em->getRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser');
-        try {
-            $user = $userRepository->findOneBy([
-                'username' => $this->getTestUsername()
-            ]);
-        } catch(\Exception $e) {
-            var_dump($e);
-            return;
-        }
-
+        $user = $userRepository->findOneBy([
+            'username' => $this->getTestUsername(),
+        ]);
         if ($user) {
             $this->em->remove($user);
+        }
+
+        $groupRepository = $this->em->getRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\Group');
+        $group = $groupRepository->findOneBy([
+            'name' => 'test_group',
+        ]);
+        if ($group) {
+            $this->em->remove($group);
         }
 
         $this->em->flush();
@@ -125,6 +177,13 @@ class CustomizedUserTest extends TestBase
         $user->setPhoneNumber('+49 160 1234 5678');
 
         return $user;
+    }
+
+    protected function getNewTestGroupObject()
+    {
+        $group = new Group('test_group');
+
+        return $group;
     }
 
     protected function getTestUsername()
