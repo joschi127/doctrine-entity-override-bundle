@@ -75,16 +75,18 @@ doctrine:
                 mappings:
                     Joschi127DoctrineEntityOverrideBundleTest:
                         mapping:              true
-                        type:                 yml
-                        dir:                  "Tests/Functional/src/Resources/config/doctrine"
+                        type:                 annotation
+                        dir:                  "Tests/Functional/src/Entity/"
                         alias:                ~
                         prefix:               Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity
                         is_bundle:            false
 
 joschi127_doctrine_entity_override:
     overridden_entities:
+        # Keep in mind: if you are using multi level inheritance, you have to use the top most super class on the
+        # left side
         # OriginalBundle\Entity\Example: CustomizedBundle\Entity\Example
-        Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\User: Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser
+        FOS\UserBundle\Model\User: Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser
 
 fos_user:
     db_driver: orm

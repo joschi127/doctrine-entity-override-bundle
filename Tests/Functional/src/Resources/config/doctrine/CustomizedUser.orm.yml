@@ -1,6 +1,0 @@
-Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser:
-    type: entity
-    table: test_user
-    fields:
-        phoneNumber:
-            type: string
