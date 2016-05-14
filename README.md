@@ -1,6 +1,8 @@
 doctrine-entity-override-bundle
 ===============================
 
+[![Build Status](https://travis-ci.org/joschi127/doctrine-entity-override-bundle.svg?branch=master)](https://travis-ci.org/joschi127/doctrine-entity-override-bundle)
+
 Symfony bundle which allows to override entities by using inheritance
 
 Configuration
