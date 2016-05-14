@@ -162,6 +162,12 @@ class LoadORMMetadataSubscriber implements EventSubscriber
 
                         foreach ($parentMetadata->getAssociationMappings() as $name => $mapping) {
                             if ($this->typeIsRelation($mapping['type'])) {
+                                // update sourceEntity of association mapping
+                                if(isset($mapping['sourceEntity']) && $mapping['sourceEntity'] == $parentClass) {
+                                    $mapping['sourceEntity'] = $class;
+                                }
+
+                                // add association mapping for actually used class
                                 $metadata->associationMappings[$name] = $mapping;
                             }
                         }
