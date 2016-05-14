@@ -14,10 +14,17 @@ class CustomizedUserTest extends TestBase
         $this->doTestRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser');
     }
 
-//    public function testRepositoryUsingOriginalEntityName()
-//    {
-//        $this->doTestRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\User');
-//    }
+    // todo: maybe add this in future? would it be possible to get getRepository() working with original entity name?
+    //
+    //    public function testRepositoryUsingOriginalEntityName()
+    //    {
+    //        $this->doTestRepository('FOS\UserBundle\Model\User');
+    //    }
+    //
+    //    public function testRepositoryUsingInBetweenEntityName()
+    //    {
+    //        $this->doTestRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\User');
+    //    }
 
     public function testRepositoryUsingUserManager()
     {
