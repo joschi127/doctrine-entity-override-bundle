@@ -162,15 +162,17 @@ class LoadORMMetadataSubscriber implements EventSubscriber
                     if (in_array($parentClass, $configuration->getMetadataDriverImpl()->getAllClassNames())) {
                         $configuration->getMetadataDriverImpl()->loadMetadataForClass($parentClass, $parentMetadata);
 
-                        foreach ($parentMetadata->getAssociationMappings() as $name => $mapping) {
-                            if ($this->typeIsRelation($mapping['type'])) {
-                                // update sourceEntity of association mapping
-                                if(isset($mapping['sourceEntity']) && $mapping['sourceEntity'] == $parentClass) {
-                                    $mapping['sourceEntity'] = $class;
-                                }
+                        if ($this->classIsOverridden($parentClass)) {
+                            foreach ($parentMetadata->getAssociationMappings() as $name => $mapping) {
+                                //if ($this->typeIsRelation($mapping['type'])) {
+                                    // update sourceEntity of association mapping
+                                    if (isset($mapping['sourceEntity']) && $mapping['sourceEntity'] == $parentClass) {
+                                        $mapping['sourceEntity'] = $class;
+                                    }
 
-                                // add association mapping for actually used class
-                                $metadata->associationMappings[$name] = $mapping;
+                                    // add association mapping for actually used class
+                                    $metadata->associationMappings[$name] = $mapping;
+                                //}
                             }
                         }
                     }
@@ -262,9 +264,9 @@ class LoadORMMetadataSubscriber implements EventSubscriber
         if ($this->classIsOverridden($metadata->getName())) {
             // remove all association mappings from mapped super classes, which are not allowed to have association mappings
             foreach ($metadata->getAssociationMappings() as $name => $mapping) {
-                if ($this->typeIsRelation($mapping['type'])) {
+                //if ($this->typeIsRelation($mapping['type'])) {
                     unset($metadata->associationMappings[$name]);
-                }
+                //}
             }
         }
     }
