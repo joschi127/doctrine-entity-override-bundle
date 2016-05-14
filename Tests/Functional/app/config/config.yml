@@ -89,4 +89,4 @@ joschi127_doctrine_entity_override:
 fos_user:
     db_driver: orm
     firewall_name: main
-    user_class: Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\User
+    user_class: Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser
