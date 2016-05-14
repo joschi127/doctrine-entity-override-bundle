@@ -101,6 +101,8 @@ class CustomizedUserTest extends TestBase
         $this->assertEquals($cleanUser->getLastName(), $user->getLastName());
         $this->assertEquals($cleanUser->getEmail(), $user->getEmail());
         $this->assertEquals($cleanUser->getPhoneNumber(), $user->getPhoneNumber());
+        $cleanGroup = $this->getNewTestGroupObject();
+        $this->assertEquals($cleanGroup->getName(), $user->getGroups()->first()->getName());
     }
 
     protected function doTestRepository($entityName)
