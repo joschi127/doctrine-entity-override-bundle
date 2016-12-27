@@ -44,6 +44,12 @@ class User extends BaseUser
      */
     protected $groups;
 
+    /**
+     * @var UserActivity
+     * @ORM\OneToOne(targetEntity="Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\UserActivity", mappedBy="user", cascade={"persist", "remove", "merge"})
+     */
+    protected $userActivity;
+
     public function __construct()
     {
         parent::__construct();
@@ -81,5 +87,23 @@ class User extends BaseUser
     public function setLastName($lastName)
     {
         $this->lastName = $lastName;
+    }
+
+    /**
+     * @return UserActivity
+     */
+    public function getUserActivity()
+    {
+        return $this->userActivity;
+    }
+
+    /**
+     * @param UserActivity $userActivity
+     */
+    public function setUserActivity($userActivity)
+    {
+        $userActivity->setUser($this);
+
+        $this->userActivity = $userActivity;
     }
 }
