@@ -109,7 +109,6 @@ class CustomizedUserTest extends TestBase
     public function testOneToOneRelationToCustomizedUser()
     {
         $this->testRepository();
-        $this->createGroup();
 
         /** @var EntityRepository $userRepository */
         $userRepository = $this->em->getRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser');
@@ -131,6 +130,37 @@ class CustomizedUserTest extends TestBase
             'username' => $this->getTestUsername(),
         ]);
         $userActivity = $this->em->getRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\UserActivity')->findOneBy(['user' => $user]);
+        $this->assertInstanceOf(
+            'Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\UserActivity',
+            $userActivity
+        );
+        $this->assertEquals($userActivity->getLastActiveAt()->format(\DateTime::ISO8601), $testDateTime->format(\DateTime::ISO8601));
+    }
+
+    public function testOneToOneRelationToCustomizedUserInversedBy()
+    {
+        $this->testRepository();
+
+        /** @var EntityRepository $userRepository */
+        $userRepository = $this->em->getRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser');
+        /** @var CustomizedUser $user */
+        $user = $userRepository->findOneBy([
+            'username' => $this->getTestUsername(),
+        ]);
+
+        $testDateTime = new \DateTime('2012-02-02T16:53:35');
+        $userActivity = new UserActivity();
+        $userActivity->setLastActiveAt($testDateTime);
+        $user->setUserActivity($userActivity);
+        $this->em->persist($user);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var CustomizedUser $user */
+        $user = $userRepository->findOneBy([
+            'username' => $this->getTestUsername(),
+        ]);
+        $userActivity = $user->getUserActivity();
         $this->assertInstanceOf(
             'Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\UserActivity',
             $userActivity

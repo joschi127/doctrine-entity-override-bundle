@@ -20,7 +20,7 @@ class UserActivity
 
     /**
      * @var User
-     * @ORM\OneToOne(targetEntity="Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\User")
+     * @ORM\OneToOne(targetEntity="Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\User", inversedBy="userActivity")
      * @ORM\JoinColumn(name="user_id", referencedColumnName="id", nullable=false)
      */
     protected $user;
