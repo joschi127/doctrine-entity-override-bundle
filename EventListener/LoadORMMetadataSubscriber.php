@@ -91,6 +91,8 @@ class LoadORMMetadataSubscriber implements EventSubscriber
             $this->unsetAssociationMappings($metadata);
             $this->unsetFieldMappings($metadata, $wasMappedSuperclass);
         }
+
+        $this->updateAssociationMappingsToMappedSuperclasses($metadata);
     }
 
     protected function setIsMappedSuperclass(ClassMetadataInfo $metadata)
@@ -311,6 +313,20 @@ class LoadORMMetadataSubscriber implements EventSubscriber
         return;
     }
 
+    protected function updateAssociationMappingsToMappedSuperclasses(ClassMetadataInfo $metadata)
+    {
+        // update association mappings of other classes, which are pointing to a class which is overridden
+        foreach ($metadata->getAssociationMappings() as $name => $mapping) {
+            if (isset($mapping['targetEntity']) && $this->classIsOverridden($mapping['targetEntity'])) {
+                $overridingClass = $this->getOverridingClass($mapping['targetEntity']);
+
+                // update targetEntity of association mapping
+                $mapping['targetEntity'] = $overridingClass;
+                $metadata->associationMappings[$name] = $mapping;
+            }
+        }
+    }
+
     protected function classIsOverridden($className)
     {
         foreach ($this->overriddenEntities as $interface => $class) {
@@ -329,6 +345,26 @@ class LoadORMMetadataSubscriber implements EventSubscriber
         }
 
         return false;
+    }
+
+    protected function getOverridingClass($className)
+    {
+        foreach ($this->overriddenEntities as $interface => $class) {
+            $interface = $this->getInterface($interface);
+            $class = $this->getClass($class);
+
+            if ($interface === $className) {
+                return $class;
+            }
+
+            foreach($this->parentClassesByClass[$class] as $parentClass) {
+                if ($parentClass === $className) {
+                    return $class;
+                }
+            }
+        }
+
+        return null;
     }
 
     protected function typeIsRelation($type)

@@ -6,6 +6,7 @@ use Doctrine\ORM\EntityRepository;
 use FOS\UserBundle\Doctrine\UserManager;
 use Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser;
 use Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\Group;
+use Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\UserActivity;
 use Joschi127\DoctrineEntityOverrideBundle\Tests\TestBase;
 
 class CustomizedUserTest extends TestBase
@@ -103,6 +104,38 @@ class CustomizedUserTest extends TestBase
         $this->assertEquals($cleanUser->getPhoneNumber(), $user->getPhoneNumber());
         $cleanGroup = $this->getNewTestGroupObject();
         $this->assertEquals($cleanGroup->getName(), $user->getGroups()->first()->getName());
+    }
+
+    public function testOneToOneRelationToCustomizedUser()
+    {
+        $this->testRepository();
+        $this->createGroup();
+
+        /** @var EntityRepository $userRepository */
+        $userRepository = $this->em->getRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser');
+        /** @var CustomizedUser $user */
+        $user = $userRepository->findOneBy([
+            'username' => $this->getTestUsername(),
+        ]);
+
+        $testDateTime = new \DateTime('2011-01-01T15:03:01');
+        $userActivity = new UserActivity();
+        $userActivity->setLastActiveAt($testDateTime);
+        $userActivity->setUser($user);
+        $this->em->persist($userActivity);
+        $this->em->flush();
+        $this->em->clear();
+
+        /** @var CustomizedUser $user */
+        $user = $userRepository->findOneBy([
+            'username' => $this->getTestUsername(),
+        ]);
+        $userActivity = $this->em->getRepository('Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\UserActivity')->findOneBy(['user' => $user]);
+        $this->assertInstanceOf(
+            'Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\UserActivity',
+            $userActivity
+        );
+        $this->assertEquals($userActivity->getLastActiveAt()->format(\DateTime::ISO8601), $testDateTime->format(\DateTime::ISO8601));
     }
 
     protected function doTestRepository($entityName)
