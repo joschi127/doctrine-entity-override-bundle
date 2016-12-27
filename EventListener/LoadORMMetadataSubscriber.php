@@ -358,7 +358,7 @@ class LoadORMMetadataSubscriber implements EventSubscriber
      * Completes the ID generator mapping. If "auto" is specified we choose the generator
      * most appropriate for the targeted database platform.
      *
-     * Most of the code in this methos is a copy of the code from
+     * Most of the code in this method is a copy of the code from
      * vendor/doctrine/orm/lib/Doctrine/ORM/Mapping/ClassMetadataFactory.php.
      *
      * @return void
