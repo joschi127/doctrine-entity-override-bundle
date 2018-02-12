@@ -172,6 +172,16 @@ class LoadORMMetadataSubscriber implements EventSubscriber
                                         $mapping['sourceEntity'] = $class;
                                     }
 
+                                    // if target entity is provided by relative classname, make it absolute
+                                    if (!class_exists($mapping['targetEntity']) && strpos($mapping['targetEntity'], '\\') === false) {
+                                        $reflClass = new \ReflectionClass($parentClass);
+                                        $namespace = $reflClass->getNamespaceName();
+                                        $absoluteTargetEntity = $namespace . '\\' . $mapping['targetEntity'];
+                                        if (class_exists($absoluteTargetEntity)) {
+                                            $mapping['targetEntity'] = $absoluteTargetEntity;
+                                        }
+                                    }
+
                                     // add association mapping for actually used class
                                     $metadata->associationMappings[$name] = $mapping;
                                 //}
