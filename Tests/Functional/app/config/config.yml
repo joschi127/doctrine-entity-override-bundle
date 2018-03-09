@@ -82,8 +82,10 @@ joschi127_doctrine_entity_override:
         # OriginalBundle\Entity\Example: CustomizedBundle\Entity\Example
         Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\ExamplePlain: Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedExamplePlain
         FOS\UserBundle\Model\User: Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser
+        Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\AssociationExample: Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\DemoNamespace\BetterAssociationExample
 
 fos_user:
     db_driver: orm
     firewall_name: main
     user_class: Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\CustomizedUser
+    from_email: { sender_name: 'Tester', address: 'test@example.com' }
