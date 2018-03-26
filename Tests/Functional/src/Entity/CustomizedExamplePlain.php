@@ -18,6 +18,12 @@ class CustomizedExamplePlain extends ExamplePlain
     protected $additionalCustomField;
 
     /**
+     * @var string
+     * @ORM\Column(type="string", length=50, nullable=true)
+     */
+    protected $overriddenField;
+
+    /**
      * @return string
      */
     public function getAdditionalCustomField()

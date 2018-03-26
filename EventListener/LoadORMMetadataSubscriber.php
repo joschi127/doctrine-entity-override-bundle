@@ -90,6 +90,7 @@ class LoadORMMetadataSubscriber implements EventSubscriber
         } else {
             $this->unsetAssociationMappings($metadata);
             $this->unsetFieldMappings($metadata, $wasMappedSuperclass);
+            $this->unsetOverriddenFieldMappings($metadata, $eventArgs->getEntityManager()->getConfiguration());
         }
 
         $this->updateAssociationMappingsToMappedSuperclasses($metadata);
@@ -213,16 +214,14 @@ class LoadORMMetadataSubscriber implements EventSubscriber
                             // ... add field mapping of the parent class to the the actually used class - it was removed
                             // from the parent class in unsetFieldMappings()
                             foreach ($parentMetadata->fieldMappings as $name => $mapping) {
-                                // remove existing mapping for these fields
-                                unset($metadata->fieldMappings[$mapping['fieldName']]);
-                                unset($metadata->columnNames[$mapping['fieldName']]);
-                                unset($metadata->fieldNames[$mapping['columnName']]);
-
-                                // re-add mapping for these fields (as if it were fields of the class itself, not
-                                // inherited fields)
-                                unset($mapping['declared']);
-                                unset($mapping['inherited']);
-                                $metadata->mapField($mapping);
+                                // only inherit mapping if class does not have an own mapping for this field itself
+                                // (this makes it possible to just override mappings, without having to use
+                                // @ORM\AttributeOverrides)
+                                if (!isset($metadata->fieldMappings[$mapping['fieldName']])) {
+                                    unset($mapping['declared']);
+                                    unset($mapping['inherited']);
+                                    $metadata->mapField($mapping);
+                                }
                             }
                             foreach ($parentMetadata->reflFields as $name => $field) {
                                 if (!isset($metadata->reflFields[$name])) {
@@ -323,6 +322,26 @@ class LoadORMMetadataSubscriber implements EventSubscriber
         return;
     }
 
+    protected function unsetOverriddenFieldMappings(ClassMetadataInfo $metadata, $configuration)
+    {
+        if ($this->classIsOverridden($metadata->getName())) {
+            $allOverridingClasses = $this->getAllOverridingClasses($metadata->getName());
+
+            foreach($allOverridingClasses as $overridingClass) {
+                $overridingMetadata = $this->getClassMetadata($overridingClass, $configuration);
+                if (in_array($overridingClass, $configuration->getMetadataDriverImpl()->getAllClassNames())) {
+                    $configuration->getMetadataDriverImpl()->loadMetadataForClass($overridingClass, $overridingMetadata);
+
+                    foreach ($metadata->fieldMappings as $name => $mapping) {
+                        if ($overridingMetadata->hasField($name) && !$overridingMetadata->isInheritedField($name)) {
+                            unset($metadata->fieldMappings[$name]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     protected function updateAssociationMappingsToMappedSuperclasses(ClassMetadataInfo $metadata)
     {
         // update association mappings of other classes, which are pointing to a class which is overridden
@@ -375,6 +394,21 @@ class LoadORMMetadataSubscriber implements EventSubscriber
         }
 
         return null;
+    }
+
+    protected function getAllOverridingClasses($className)
+    {
+        $overridingClass = $this->getOverridingClass($className);
+        $allOverridingClasses = [ $overridingClass ];
+        foreach($this->parentClassesByClass[$overridingClass] as $parentClass) {
+            if ($parentClass == $className) {
+                break;
+            }
+
+            array_unshift($allOverridingClasses, $parentClass);
+        }
+
+        return $allOverridingClasses;
     }
 
     protected function typeIsRelation($type)

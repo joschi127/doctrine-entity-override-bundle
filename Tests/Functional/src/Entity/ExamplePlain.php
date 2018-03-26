@@ -31,7 +31,13 @@ class ExamplePlain
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $defaultFieldPrivate;   // special handling for private inherited properties required, so let us
-                                        // check both, protected and private properties, in our test
+                                    // check both, protected and private properties, in our test
+
+    /**
+     * @var string
+     * @ORM\Column(type="string", length=20, nullable=false)
+     */
+    protected $overriddenField;
 
     /**
      * @return int
@@ -71,5 +77,21 @@ class ExamplePlain
     public function setDefaultFieldPrivate($defaultFieldPrivate)
     {
         $this->defaultFieldPrivate = $defaultFieldPrivate;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOverriddenField()
+    {
+        return $this->overriddenField;
+    }
+
+    /**
+     * @param string $overriddenField
+     */
+    public function setOverriddenField($overriddenField)
+    {
+        $this->overriddenField = $overriddenField;
     }
 }

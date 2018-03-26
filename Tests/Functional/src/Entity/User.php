@@ -35,6 +35,22 @@ class User extends BaseUser
     protected $lastName;
 
     /**
+     * Overridden property from FOS\UserBundle\Model\User.
+     *
+     * @var string
+     * @ORM\Column(type="string", length=110, nullable=false)
+     */
+    protected $username;
+
+    /**
+     * Overridden property from FOS\UserBundle\Model\User.
+     *
+     * @var string
+     * @ORM\Column(type="string", length=120, nullable=true)
+     */
+    protected $email;
+
+    /**
      * @var ArrayCollection
      * @ORM\ManyToMany(targetEntity="Joschi127\DoctrineEntityOverrideBundle\Tests\Functional\src\Entity\Group", cascade={"persist"})
      * @ORM\JoinTable(name="test_user_has_group",
