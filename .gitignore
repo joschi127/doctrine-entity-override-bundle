@@ -1,3 +1,4 @@
 /Tests/Functional/app/config/parameters.yml
 /composer.lock
 /vendor/
+/.idea/
