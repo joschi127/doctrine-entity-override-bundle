@@ -1,0 +1,50 @@
+##
+## Tuggerfile to be used by the tool "tugger" to run a local development environment with Chef and Berkshelf based
+## provisioning in a Docker container.
+##
+
+# the unique name of your project
+# (use '-' to separate words, no spaces, underscores and dots please)
+project_name="doctrine-entity-override-bundle"
+
+# the git repository url of the tugger-stack you want to use
+# (you can also use a repository in your local file system, but only committed changes will take effect)
+tugger_stack_git_url="https://github.com/joschi127/tugger-stack-lamp-php7.git"
+
+# the git branch or tag name of the tugger-stack you want to use
+tugger_stack_version="master"
+
+# the name of your local docker image
+# (an image can be shared for multiple projects when using the same name)
+tugger_stack_shared_image_name="tugger-stack-lamp-php7"
+
+# list of sub folders of your project which should not be used from the host filesystem directly when using boot2docker
+# on macs, because the mounted host filesystem folders are very slow on macs with boot2docker (because boot2docker
+# is using VirtualBox shared folders which are quite slow)
+boot2docker_fast_folders="vendor app/cache app/logs app/var"
+
+# the ports you want to expose
+mapped_ports="22 80 443"
+
+# write the following host names to /etc/hosts
+# (leave empty if you do not want to let tugger update your /etc/hosts file)
+etc_hosts="$project_name $project_name.local"
+
+# chef json override
+# (the given json object will be merged with the chef.json of the used tugger-stack, so you can add or override
+# options here)
+chef_json_override=$(cat <<EOF
+    {
+        "app": {
+            "name": "$project_name",
+            "server_name": "$project_name",
+            "server_aliases": [ "$project_name.local" ]
+        },
+        "php": {
+            "ini_settings": {
+                "memory_limit": "3072M"
+            }
+        }
+    }
+EOF
+)
