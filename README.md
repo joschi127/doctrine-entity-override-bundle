@@ -28,3 +28,8 @@ Hints
   If you want to extend other, third party entities, this should work in most cases. But parts of the mapping will be
   regenerated internally by the `LoadORMMetadataSubscriber` of this bundle and at least some doctrine mapping features
   might not be supported and you might run into issues.
+* Using `@ORM\AttributeOverrides` is not supported, instead just override the property in your customized entity class
+  and add the ORM mapping for the property in your customized entity as usual. This bundle will then unload the
+  original mapping configuration and only use your customized mapping.
+* Have a look at the [Tests/Functional/src folder](https://github.com/joschi127/doctrine-entity-override-bundle/tree/master/Tests/Functional/src)
+  for some example code.
