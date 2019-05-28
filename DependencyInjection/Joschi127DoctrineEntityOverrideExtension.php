@@ -11,11 +11,13 @@ class Joschi127DoctrineEntityOverrideExtension extends Extension
 {
     public function load(array $configs, ContainerBuilder $container)
     {
-        $config = $this->processConfiguration(new Configuration(), $configs);
-        $overriddenEntities = $config['overridden_entities'];
-        if ($container->hasParameter($this->getAlias() . '.config.overridden_entities')) {
-            $overriddenEntities = array_merge($container->getParameter($this->getAlias() . '.config.overridden_entities'), $overriddenEntities);
+        $overriddenEntities = [];
+        foreach ($configs as $config){
+            if (isset($config['overridden_entities'])) {
+                $overriddenEntities = array_merge($overriddenEntities, $config['overridden_entities']);
+            }
         }
+        
         $container->setParameter($this->getAlias() . '.config.overridden_entities', $overriddenEntities);
 
         $loader = new Loader\YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
