@@ -57,6 +57,9 @@ before_install:
     - composer self-update
     - if [ "$DEPS" = "dev" ]; then perl -pi -e 's/^}$/,"minimum-stability":"dev"}/' composer.json; fi
     - if [ "$SYMFONY_VERSION" != "" ]; then composer require "symfony/symfony:${SYMFONY_VERSION}" --no-update; fi
+    - sudo mysql -e "use mysql; update user set authentication_string=PASSWORD('test-pw') where User='root'; update user set plugin='mysql_native_password';FLUSH PRIVILEGES;"
+    - sudo mysql_upgrade -u root -ptest-pw
+    - sudo service mysql restart
 
 install:
     - composer update --prefer-dist $COMPOSER_FLAGS
