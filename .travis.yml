@@ -30,24 +30,30 @@ addons:
 
 matrix:
     include:
-        - php: 7.0
-          env: COMPOSER_FLAGS="--prefer-lowest"
+#        - php: 7.0
+#          env: COMPOSER_FLAGS="--prefer-lowest"
         - php: 7.0
           env: DEPS=dev SYMFONY_VERSION=~3.1
         - php: 7.0
           env: DEPS=dev COMPOSER_FLAGS="--prefer-stable" SYMFONY_VERSION=~3.1
-        - php: 7.1
-          env: COMPOSER_FLAGS="--prefer-lowest"
+#        - php: 7.1
+#          env: COMPOSER_FLAGS="--prefer-lowest"
         - php: 7.1
           env: DEPS=dev SYMFONY_VERSION=~3.1
         - php: 7.1
           env: DEPS=dev COMPOSER_FLAGS="--prefer-stable" SYMFONY_VERSION=~3.1
-        - php: 7.2
-          env: COMPOSER_FLAGS="--prefer-lowest"
+#        - php: 7.2
+#          env: COMPOSER_FLAGS="--prefer-lowest"
         - php: 7.2
           env: DEPS=dev SYMFONY_VERSION=~3.1
         - php: 7.2
           env: DEPS=dev COMPOSER_FLAGS="--prefer-stable" SYMFONY_VERSION=~3.1
+#        - php: 7.3
+#          env: COMPOSER_FLAGS="--prefer-lowest"
+        - php: 7.3
+          env: DEPS=dev SYMFONY_VERSION=~3.4
+        - php: 7.3
+          env: DEPS=dev COMPOSER_FLAGS="--prefer-stable" SYMFONY_VERSION=~3.4
     fast_finish: true
 
 before_install:
