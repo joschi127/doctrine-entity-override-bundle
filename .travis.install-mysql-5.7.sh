@@ -15,6 +15,7 @@ sudo rm -rf /var/lib/apt/lists/*
 sudo apt-get clean
 sudo apt-get update -q
 sudo apt-get install -q -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" mysql-server libmysqlclient-dev
+sudo service mysql start
 sudo mysql_upgrade
 
 echo "Restart mysql..."
