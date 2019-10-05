@@ -21,7 +21,7 @@
     "phpunit/phpunit": "5.7.*",
     "symfony/finder": "^2.4|^3.0|^4.0",
     "symfony/monolog-bundle": "^2.4|^3.0|^4.0",
-    "monolog/monolog: "^1.0",
+    "monolog/monolog": "^1.0",
     "symfony/swiftmailer-bundle": "^2.3|^3.0",
     "friendsofsymfony/user-bundle": "^2.1"
   },
